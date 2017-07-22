@@ -16,7 +16,7 @@
 
     <footer class="footer">
       <div class="container">
-        <p class="text-thrively">Powered by Team Half Baked!</p>
+        <p class="text-thrively">By <strong>Team Half Baked!</strong></p>
       </div>
     </footer>
   </div>

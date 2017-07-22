@@ -37,19 +37,31 @@ const getAllUsers = () => get(urlFactory.getUsersURL());
 const checkAvailability = (data) => {
   // return post(urlFactory, data);
   return new Promise((resolve) => {
-    const data = {
-      status: 'conflict',
-      timeslots: [{
+    let response = {
+      status: 'ok',
+      timeslot: {
         start: '05.00',
         end: '06:00',
-      }, {
-        start: '08:00',
-        end: '09.00',
-      }],
+      },
     };
 
+    if (data.guests.filter((guest) => guest.firstName === 'Mark').length) {
+      response = {
+        status: 'conflict',
+        timeslots: [{
+          start: '05.00',
+          end: '06:00',
+        }, {
+          start: '08:00',
+          end: '09.00',
+        }],
+      };
+    }
+
+    console.log(response);
+
     setTimeout(() => {
-      resolve({data});
+      resolve({data: response});
     }, 1000);
   });
 };
