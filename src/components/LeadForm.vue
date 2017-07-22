@@ -1,0 +1,213 @@
+<template>
+  <div class="form-container">
+    <div>
+      <h3>Please fill in your details below</h3>
+    </div>
+
+    <div class="container text-left form">
+      <form @submit.prevent="validateBeforeSubmit">
+        <div class="form-group">
+          <label for="company">Company (required)</label>
+          <input name="company" v-model="formData.company" v-validate data-vv-validate-on="blur" data-vv-rules="required" @focus="errors.remove('company')" :class="{'form-control': true}" type="text" placeholder="Company name">
+          <small v-show="errors.has('company')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('company') }}</small>
+        </div>
+        <div class="form-group">
+          <label for="contact">Name (required)</label>
+          <input name="contact" v-model="formData.contact" v-validate data-vv-validate-on="blur" data-vv-rules="required" @focus="errors.remove('contact')" :class="{'form-control': true}" type="text" placeholder="Contact name">
+          <small v-show="errors.has('contact')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('contact') }}</small>
+        </div>
+        <div class="form-group">
+          <label for="phone">Contact Number</label>
+          <input name="phone" v-model="formData.phone" v-validate data-vv-validate-on="blur" data-vv-rules="numeric" @focus="errors.remove('phone')" :class="{'form-control': true}" type="text" placeholder="Contact number">
+          <small v-show="errors.has('phone')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('phone') }}</small>
+        </div>
+        <div class="form-group">
+          <label for="email">Email Address (required)</label>
+          <input name="email" v-model="formData.email" v-validate data-vv-validate-on="blur" data-vv-rules="required|customEmail:email" @focus="errors.remove('email')" :class="{'form-control': true, 'is-danger': errors.has('email') }" type="text" placeholder="Email address">
+          <small v-show="errors.has('email')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('email') }}</small>
+        </div>
+        <div class="form-group">
+          <label for="url">Web Address</label>
+          <input name="url" v-model="formData.url" v-validate data-vv-validate-on="blur" data-vv-rules="url" @focus="errors.remove('url')" :class="{'form-control': true, 'is-danger': errors.has('url') }" type="text">
+          <small v-show="errors.has('url')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('url') }}</small>
+        </div>
+        <div class="form-group">
+          <label for="message">Message (required)</label>
+          <textarea name="message" v-model="formData.message" v-validate data-vv-validate-on="blur" data-vv-rules="required" @focus="errors.remove('message')" :class="{'form-control': true}" type="text"></textarea>
+          <small v-show="errors.has('message')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('message') }}</small>
+        </div>
+        <div>
+          <br>
+          <vue-recaptcha
+            ref="recaptcha"
+            :sitekey="siteKey"
+            @verify="onVerify"
+            >
+          </vue-recaptcha>
+          <small v-show="formData.recaptcha.warning" :class="{'form-text': true, 'text-danger':true}">Please verify the reCAPTCHA</small>
+          <br>
+        </div>
+        <button type="submit" :class="{'btn': true, 'btn-primary':true, 'btn-submit': true}">Submit</button>
+      </form>
+    </div>
+  </div>
+</template>
+
+<script>
+import Vue from 'vue';
+import VeeValidate, {Validator} from 'vee-validate';
+import VueRecaptcha from 'vue-recaptcha';
+import validators from '../services/validatorFactory.js';
+
+Validator.extend('customEmail', {
+  getMessage: validators.message,
+  validate: validators.validator,
+});
+
+Vue.use(VeeValidate);
+
+export default {
+  name: 'leadform',
+  props: ['formData'],
+  data() {
+    return {
+      siteKey: process.env.siteKey,
+    };
+  },
+  components: {
+    'vue-recaptcha': VueRecaptcha,
+  },
+  methods: {
+    validateBeforeSubmit(e) {
+      this.$validator.validateAll();
+
+      if(!this.formData.recaptcha.verified) {
+        this.formData.recaptcha.warning = true;
+      }
+
+      if (!this.errors.any() && this.formData.recaptcha.verified) {
+        window.fbq('track', 'Lead');
+        this.submitForm();
+      }
+    },
+    submitForm() {
+      this.errors.clear();
+      this.$emit('send', {
+        data: {
+          company: this.formData.company,
+          contact: this.formData.contact,
+          contactNumber: this.formData.phone,
+          email: this.formData.email,
+          webUrl: this.formData.url,
+          message: this.formData.message,
+        },
+        recaptcha: this.formData.recaptcha,
+      });
+    },
+    onVerify(response) {
+      this.formData.recaptcha = {
+        verified: true,
+        warning: false,
+        response,
+      };
+    },
+  },
+};
+</script>
+
+<style>
+body {
+  font-family: Raleway,sans-serif;
+  font-size: 15px;
+  line-height: 26px;
+  color: grey;
+  font-weight: 400;
+  overflow-x: hidden!important;
+  -webkit-font-smoothing: antialiased;
+}
+
+.form-container{
+  margin-top:30px;
+}
+
+.container.form{
+  padding-top:30px;
+  max-width: 600px;
+}
+
+.container {
+  margin:0 auto;
+}
+
+label {
+  margin-bottom: 0;
+  font-weight: 400;
+}
+
+.btn-submit {
+  border-color: #5a4184;
+  background-color: #5a4184;
+  min-width: 145px;
+  outline: 0;
+  padding: 13px 40px;
+  font-style: normal;
+  font-weight: 700;
+  font-family: Poppins,sans-serif;
+  font-size: 14px;
+  line-height: 1.7em;
+  text-transform: uppercase;
+  text-align: center;
+  cursor: pointer;
+  -webkit-transition: color .25s ease-out,background-color .25s ease-out,border-color .25s ease-out;
+  -moz-transition: color .25s ease-out,background-color .25s ease-out,border-color .25s ease-out;
+  transition: color .25s ease-out,background-color .25s ease-out,border-color .25s ease-out;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  border-radius: 0;
+}
+
+.btn-submit:hover, .btn-submit:active, .btn-submit:focus {
+  border-color: #5a4184;
+  background-color: #5a4184;
+}
+
+.btn-submit.disabled:hover, .btn-submit.disabled:active, .btn-submit.disabled:focus {
+  border-color: #5a4184;
+  background-color: #5a4184;
+}
+
+input[type="text"], textarea[type="text"] {
+  width: 100%;
+  margin-bottom: 0;
+  padding: 5px 15px;
+  border: 1px solid #f2f2f2;
+  outline: 0;
+  font-family: inherit;
+  font-size: 13px;
+  background-color: #fff;
+  color: #969696;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  border-radius: 0;
+  box-shadow: none;
+  line-height: 1em;
+  margin-bottom:10px;
+}
+textarea[type="text"] {
+  height: 4em;
+}
+input[type="text"]:focus, textarea[type="text"]:focus {
+  border-color: #5a4184;
+  box-shadow: none;
+}
+
+.form-group {
+  margin-bottom: 0px;
+}
+.form-group:last-of-type {
+  padding-bottom: 10px;
+}
+
+</style>
