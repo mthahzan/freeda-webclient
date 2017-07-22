@@ -35,35 +35,35 @@ const getAllUsers = () => get(urlFactory.getUsersURL());
  * @return {Promise}
  */
 const checkAvailability = (data) => {
-  // return post(urlFactory, data);
-  return new Promise((resolve) => {
-    let response = {
-      status: 'ok',
-      timeslot: {
-        start: '05.00',
-        end: '06:00',
-      },
-    };
-
-    if (data.guests.filter((guest) => guest.firstName === 'Mark').length) {
-      response = {
-        status: 'conflict',
-        timeslots: [{
-          start: '05.00',
-          end: '06:00',
-        }, {
-          start: '08:00',
-          end: '09.00',
-        }],
-      };
-    }
-
-    console.log(response);
-
-    setTimeout(() => {
-      resolve({data: response});
-    }, 1000);
-  });
+  return post(urlFactory, data);
+  // return new Promise((resolve) => {
+  //   let response = {
+  //     status: 'ok',
+  //     timeslot: {
+  //       start: '05.00',
+  //       end: '06:00',
+  //     },
+  //   };
+  //
+  //   if (data.guests.filter((guest) => guest.firstName === 'Mark').length) {
+  //     response = {
+  //       status: 'conflict',
+  //       timeslots: [{
+  //         start: '05.00',
+  //         end: '06:00',
+  //       }, {
+  //         start: '08:00',
+  //         end: '09.00',
+  //       }],
+  //     };
+  //   }
+  //
+  //   console.log(response);
+  //
+  //   setTimeout(() => {
+  //     resolve({data: response});
+  //   }, 1000);
+  // });
 };
 
 /**
@@ -72,17 +72,17 @@ const checkAvailability = (data) => {
  * @return {Promise}
  */
 const confirm = (data) => {
-  // return post(urlFactory, data);
-  return new Promise((resolve) => {
-    const response = {
-      status: 'ok',
-      timeslot: data.timeslot,
-    };
-
-    setTimeout(() => {
-      resolve({response});
-    }, 1000);
-  });
+  return post(urlFactory, data);
+  // return new Promise((resolve) => {
+  //   const response = {
+  //     status: 'ok',
+  //     timeslot: data.timeslot,
+  //   };
+  //
+  //   setTimeout(() => {
+  //     resolve({response});
+  //   }, 1000);
+  // });
 };
 
 export {get, post, getAllUsers, checkAvailability, confirm};

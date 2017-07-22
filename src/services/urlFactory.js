@@ -21,5 +21,5 @@ export default {
    * Factory method to generate the URL to confirm event
    * @return {string} URL to Confirm event
    */
-  confirm: () => `${BASE}/confirm`,
+  confirm: () => `${BASE}/createMeeting`,
 };
