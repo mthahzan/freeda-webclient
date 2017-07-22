@@ -2,22 +2,24 @@
  * The base URL of the API endpoint
  * @type {string}
  */
-const BASE = process.env.apiURL;
+const BASE = 'http://thahsan.me:9090/freedacore';
 
 export default {
   /**
-   * Factory method to generate the URL to check the token validity
-   * @return {string} URL to check the token validity
+   * Factory method to generate the URL to GET the users
+   * @return {string} URL to GET the users
    */
-  validateURL: () => {
-    return `${BASE}lead/public/validity`;
-  },
+  getUsersURL: () => `${BASE}/user`,
 
   /**
-   * Factory method to generate the URL to create a new lead
-   * @return {string} URL to create a new Lead
+   * Factory method to generate the URL to check availability
+   * @return {string} URL to check availability
    */
-  leadUrl: () => {
-    return `${BASE}lead/public`;
-  },
+  checkAvailability: () => `${BASE}/checkAvailability`,
+
+  /**
+   * Factory method to generate the URL to confirm event
+   * @return {string} URL to Confirm event
+   */
+  confirm: () => `${BASE}/confirm`,
 };

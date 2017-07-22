@@ -1,6 +1,8 @@
 module.exports = {
   root: true,
   globals: {
+    Promise: false,
+    setTimeout: false,
     console: false,
     window: false,
     process: false,

@@ -1,91 +1,35 @@
 <template>
   <div id="leadpage">
     <div :class="{'overlay': true, 'active': overlayActive}"></div>
+
     <div v-if="formSubmitted || error" class="msg success-msg">
       <h1 class="formSubmitted">{{ message }}</h1>
     </div>
-    <div v-else>
-      <LeadForm @send="onSubmit" :form-data="formData"></LeadForm>
+
+    <div v-if="!formSubmitted && pageState === 0">
+      <LeadForm @send="onEventCreateSubmit" :other-users="otherUsers"></LeadForm>
     </div>
+
+    <div v-if="!formSubmitted && pageState === 1">
+      <ConfirmationForm @send="onConfimationSubmit" :data="confirmationData"></ConfirmationForm>
+    </div>
+
     <footer class="footer">
       <div class="container">
-        <p class="text-thrively">Powered by <a class="img-thrively" href="https://www.thrively.io"><img class="img-responsive" src="https://www.thrively.io/wp-content/uploads/2016/07/Thrively-Light2-1.png"></img></a></p>
+        <p class="text-thrively">Powered by Team Half Baked!</p>
       </div>
     </footer>
   </div>
 </template>
 
 <script>
-import urls from '../services/urlFactory';
-import {post} from '../services/request';
-
+import {getAllUsers, checkAvailability, confirm} from '../services/request';
 import LeadForm from '../components/LeadForm';
-
-// Hackathon data lol
-const data = {
-  /**
-   * Current user
-   * @type {Object}
-   */
-  currentUser: {
-    id: 1,
-    name: 'Mohomed Thahsan',
-    avatar: '', // TODO: Add avatar URL
-    googleCalendarAccessKey: '', // TODO: Add Access key
-  },
-
-  /**
-   * User options
-   * @type {Array}
-   */
-  otherUsers: [{
-    id: 2,
-    name: 'Chomal Meguntenna',
-    avatar: '', // TODO: Add avatar URL
-    googleCalendarAccessKey: '', // TODO: Add Access key
-  }, {
-    id: 3,
-    name: 'Dhammika Sriyananda',
-    avatar: '', // TODO: Add avatar URL
-    googleCalendarAccessKey: '', // TODO: Add Access key
-  }, {
-    id: 4,
-    name: 'Thilina Lokuge',
-    avatar: '', // TODO: Add avatar URL
-    googleCalendarAccessKey: '', // TODO: Add Access key
-  }],
-
-  /**
-   * Meeting location options
-   * @type {Array}
-   */
-  locations: [{
-    id: 1,
-    name: 'Main Conference Room',
-    avatar: '', // TODO: Add avatar URL
-    googleCalendarAccessKey: '', // TODO: Add Access key
-  }, {
-    id: 2,
-    name: 'Lobby Area',
-    avatar: '', // TODO: Add avatar URL
-    googleCalendarAccessKey: '', // TODO: Add Access key
-  }],
-};
-
-// const createRequestConfig = () => {
-//   const token = window.location.href.split('ref=').pop() || '';
-//
-//   return {
-//     headers: {
-//       'Authorization': `Bearer: ${token}`,
-//     },
-//   };
-// };
+import ConfirmationForm from '../components/ConfirmationForm';
 
 const createEmptyDataObject = () => {
   return {
-    currentUser: data.currentUser,
-    otherUsers: data.otherUsers,
+    otherUsers: [],
     company: '',
     contact: '',
     phone: '',
@@ -103,32 +47,33 @@ const createEmptyDataObject = () => {
 export default {
   name: 'leadpage',
   beforeMount() {
-    this.overlayActive = false;
+    this.overlayActive = true;
 
-    // get(urls.validateURL(), createRequestConfig())
-    //   .then(() => {
-    //     this.$data.overlayActive = false;
-    //     this.$data.pageValid = true;
-    //   })
-    //   .catch(() => {
-    //     this.$data.error = true;
-    //     this.$data.pageValid = false;
-    //     this.$data.message = 'Page not found';
-    //     this.$data.overlayActive = false;
-    //   });
+    getAllUsers()
+      .then((otherUsers) => {
+        this.$data.otherUsers = otherUsers;
+
+        this.$data.overlayActive = false;
+      });
   },
   data() {
     return {
-      pageValid: false,
+      pageState: 0,
+
       formSubmitted: false,
       overlayActive: false,
-      formData: createEmptyDataObject(),
+
+      otherUsers: [],
+      locations: [],
+      confirmationData: {},
+
       error: false,
       message: null,
     };
   },
   components: {
     LeadForm,
+    ConfirmationForm,
   },
   methods: {
     reset() {
@@ -139,27 +84,52 @@ export default {
         this.$data.message = null;
       }
     },
-    onSubmit(params) {
-      const token = window.location.href.split('ref=').pop() || '';
-
+    onEventCreateSubmit(params) {
       this.overlayActive = true;
-      post(urls.leadUrl(), params, {
-        headers: {
-          'Authorization': `Bearer: ${token}`,
-        },
-      })
-        .then(() => {
-          window.fbq('track', 'CompleteRegistration');
+
+      const data = params.data;
+      const startTime = (params.data.fromTime || '').split(':');
+      const endTime = (params.data.toTime || '').split(':');
+
+      const startTimeStamp = new Date(data.date);
+      startTimeStamp.setHours(startTime[0]);
+      startTimeStamp.setMinutes(startTime[1]);
+
+      const endTimeStamp = new Date(data.date);
+      endTimeStamp.setHours(endTime[0]);
+      endTimeStamp.setMinutes(endTime[1]);
+
+      const payload = {
+        ...data,
+
+        fromTime: startTimeStamp,
+        toTime: endTimeStamp,
+      };
+
+      checkAvailability(payload)
+        .then((response) => {
+          this.$data.pageState = 1;
+
+          this.$data.confirmationMessage = 'Please select an alternative';
+          this.$data.confirmationData = response.data;
           this.$data.overlayActive = false;
-          this.$data.message = `Thanks for sharing your details.
-            We will get in touch with you.`;
+        });
+    },
+
+    onConfimationSubmit(params) {
+      this.overlayActive = true;
+
+      const data = {
+        timeslot: params.data.timeslot,
+      };
+
+      confirm(data)
+        .then((response) => {
+          console.log('RESPONSE', response);
+
           this.$data.formSubmitted = true;
-          this.$data.error = false;
-        })
-        .catch(() => {
+          this.$data.message = 'All done';
           this.$data.overlayActive = false;
-          this.$data.message = 'Oops, something went wrong!';
-          this.$data.error = true;
         });
     },
   },

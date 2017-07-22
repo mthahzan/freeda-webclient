@@ -1,7 +1,7 @@
 <template>
   <div class="form-container">
     <div>
-      <h3>Hi {{ formData.currentUser.name }}, please fill in your details below to create an event!</h3>
+      <h3>Please fill in your details below to create an event!</h3>
     </div>
 
     <div class="container text-left form">
@@ -40,15 +40,27 @@
 
         <!-- Guest selection -->
         <el-form-item label="Event guests">
-          <el-select v-model="form.guests" multiple placeholder="Select">
+          <el-select v-model="form.guests" multiple placeholder="Select guests">
             <el-option
-              v-for="item in (formData.otherUsers || [])"
+              v-for="item in (otherUsers.data || [])"
+              :key="item.id"
+              :label="item.firstName + ' ' + item.lastName"
+              :value="item.id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+        <!-- Event location selection -->
+        <!-- <el-form-item label="Event location">
+          <el-select v-model="form.location" placeholder="Select location">
+            <el-option
+              v-for="item in (locations || [])"
               :key="item.id"
               :label="item.name"
               :value="item.id">
             </el-option>
           </el-select>
-        </el-form-item>
+        </el-form-item> -->
 
         <!-- Actions -->
         <el-form-item label-width="120px">
@@ -61,27 +73,12 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import VeeValidate, {Validator} from 'vee-validate';
-import VueRecaptcha from 'vue-recaptcha';
-
-import validators from '../services/validatorFactory.js';
-
-Validator.extend('customEmail', {
-  getMessage: validators.message,
-  validate: validators.validator,
-});
-
-Vue.use(VeeValidate);
 
 export default {
   name: 'leadform',
-  props: ['formData'],
+  props: ['otherUsers'],
   data() {
     return {
-      currentUser: this.formData.currentUser,
-      otherUsers: this.formData.otherUsers,
-
       timePickerOptions: {
         start: '08:00',
         step: '00:30',
@@ -94,12 +91,7 @@ export default {
         toTime: null,
         guests: [],
       },
-
-      siteKey: process.env.siteKey,
     };
-  },
-  components: {
-    'vue-recaptcha': VueRecaptcha,
   },
   methods: {
     /**
@@ -126,38 +118,20 @@ export default {
       console.log('End', event);
     },
 
-    validateBeforeSubmit(e) {
-      this.$validator.validateAll();
-
-      if(!this.formData.recaptcha.verified) {
-        this.formData.recaptcha.warning = true;
-      }
-
-      if (!this.errors.any() && this.formData.recaptcha.verified) {
-        window.fbq('track', 'Lead');
-        this.submitForm();
-      }
-    },
+    /**
+     * Submit the form
+     */
     submitForm() {
-      this.errors.clear();
-      this.$emit('send', {
-        data: {
-          company: this.formData.company,
-          contact: this.formData.contact,
-          contactNumber: this.formData.phone,
-          email: this.formData.email,
-          webUrl: this.formData.url,
-          message: this.formData.message,
-        },
-        recaptcha: this.formData.recaptcha,
-      });
-    },
-    onVerify(response) {
-      this.formData.recaptcha = {
-        verified: true,
-        warning: false,
-        response,
+      const data = {
+        ...this.form,
+
+        guests: (this.otherUsers.data || [])
+          .filter((guest) => {
+            return guest && (this.form.guests || []).indexOf(guest.id) > -1;
+          }),
       };
+
+      this.$emit('send', {data});
     },
   },
 };
