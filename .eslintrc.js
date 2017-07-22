@@ -1,6 +1,7 @@
 module.exports = {
   root: true,
   globals: {
+    console: false,
     window: false,
     process: false,
   },

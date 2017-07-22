@@ -17,22 +17,75 @@
 
 <script>
 import urls from '../services/urlFactory';
-import {get, post} from '../services/request';
+import {post} from '../services/request';
 
 import LeadForm from '../components/LeadForm';
 
-const createRequestConfig = () => {
-  const token = window.location.href.split('ref=').pop() || '';
+// Hackathon data lol
+const data = {
+  /**
+   * Current user
+   * @type {Object}
+   */
+  currentUser: {
+    id: 1,
+    name: 'Mohomed Thahsan',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  },
 
-  return {
-    headers: {
-      'Authorization': `Bearer: ${token}`,
-    },
-  };
+  /**
+   * User options
+   * @type {Array}
+   */
+  otherUsers: [{
+    id: 2,
+    name: 'Chomal Meguntenna',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  }, {
+    id: 3,
+    name: 'Dhammika Sriyananda',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  }, {
+    id: 4,
+    name: 'Thilina Lokuge',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  }],
+
+  /**
+   * Meeting location options
+   * @type {Array}
+   */
+  locations: [{
+    id: 1,
+    name: 'Main Conference Room',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  }, {
+    id: 2,
+    name: 'Lobby Area',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  }],
 };
+
+// const createRequestConfig = () => {
+//   const token = window.location.href.split('ref=').pop() || '';
+//
+//   return {
+//     headers: {
+//       'Authorization': `Bearer: ${token}`,
+//     },
+//   };
+// };
 
 const createEmptyDataObject = () => {
   return {
+    currentUser: data.currentUser,
+    otherUsers: data.otherUsers,
     company: '',
     contact: '',
     phone: '',
@@ -50,19 +103,19 @@ const createEmptyDataObject = () => {
 export default {
   name: 'leadpage',
   beforeMount() {
-    this.overlayActive = true;
+    this.overlayActive = false;
 
-    get(urls.validateURL(), createRequestConfig())
-      .then(() => {
-        this.$data.overlayActive = false;
-        this.$data.pageValid = true;
-      })
-      .catch(() => {
-        this.$data.error = true;
-        this.$data.pageValid = false;
-        this.$data.message = 'Page not found';
-        this.$data.overlayActive = false;
-      });
+    // get(urls.validateURL(), createRequestConfig())
+    //   .then(() => {
+    //     this.$data.overlayActive = false;
+    //     this.$data.pageValid = true;
+    //   })
+    //   .catch(() => {
+    //     this.$data.error = true;
+    //     this.$data.pageValid = false;
+    //     this.$data.message = 'Page not found';
+    //     this.$data.overlayActive = false;
+    //   });
   },
   data() {
     return {

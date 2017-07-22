@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <CreateEventPage></CreateEventPage>
+    <LeadPage></LeadPage>
   </div>
 </template>
 

@@ -1,54 +1,61 @@
 <template>
   <div class="form-container">
     <div>
-      <h3>Please fill in your details below</h3>
+      <h3>Hi {{ formData.currentUser.name }}, please fill in your details below to create an event!</h3>
     </div>
 
     <div class="container text-left form">
-      <form @submit.prevent="validateBeforeSubmit">
-        <div class="form-group">
-          <label for="company">Company (required)</label>
-          <input name="company" v-model="formData.company" v-validate data-vv-validate-on="blur" data-vv-rules="required" @focus="errors.remove('company')" :class="{'form-control': true}" type="text" placeholder="Company name">
-          <small v-show="errors.has('company')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('company') }}</small>
-        </div>
-        <div class="form-group">
-          <label for="contact">Name (required)</label>
-          <input name="contact" v-model="formData.contact" v-validate data-vv-validate-on="blur" data-vv-rules="required" @focus="errors.remove('contact')" :class="{'form-control': true}" type="text" placeholder="Contact name">
-          <small v-show="errors.has('contact')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('contact') }}</small>
-        </div>
-        <div class="form-group">
-          <label for="phone">Contact Number</label>
-          <input name="phone" v-model="formData.phone" v-validate data-vv-validate-on="blur" data-vv-rules="numeric" @focus="errors.remove('phone')" :class="{'form-control': true}" type="text" placeholder="Contact number">
-          <small v-show="errors.has('phone')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('phone') }}</small>
-        </div>
-        <div class="form-group">
-          <label for="email">Email Address (required)</label>
-          <input name="email" v-model="formData.email" v-validate data-vv-validate-on="blur" data-vv-rules="required|customEmail:email" @focus="errors.remove('email')" :class="{'form-control': true, 'is-danger': errors.has('email') }" type="text" placeholder="Email address">
-          <small v-show="errors.has('email')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('email') }}</small>
-        </div>
-        <div class="form-group">
-          <label for="url">Web Address</label>
-          <input name="url" v-model="formData.url" v-validate data-vv-validate-on="blur" data-vv-rules="url" @focus="errors.remove('url')" :class="{'form-control': true, 'is-danger': errors.has('url') }" type="text">
-          <small v-show="errors.has('url')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('url') }}</small>
-        </div>
-        <div class="form-group">
-          <label for="message">Message (required)</label>
-          <textarea name="message" v-model="formData.message" v-validate data-vv-validate-on="blur" data-vv-rules="required" @focus="errors.remove('message')" :class="{'form-control': true}" type="text"></textarea>
-          <small v-show="errors.has('message')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('message') }}</small>
-        </div>
-        <div>
-          <br>
-          <vue-recaptcha
-            ref="recaptcha"
-            :sitekey="siteKey"
-            @verify="onVerify"
-            >
-          </vue-recaptcha>
-          <small v-show="formData.recaptcha.warning" :class="{'form-text': true, 'text-danger':true}">Please verify the reCAPTCHA</small>
-          <br>
-        </div>
-        <button type="submit" :class="{'btn': true, 'btn-primary':true, 'btn-submit': true}">Submit</button>
-      </form>
+      <el-form ref="form" :model="form" label-width="120px">
+
+        <!-- Event date selection -->
+        <el-form-item label="Event date">
+          <el-date-picker
+            v-model="form.date"
+            type="date"
+            placeholder="Pick a day"
+            @change="onEventDateChange">
+          </el-date-picker>
+        </el-form-item>
+
+        <!-- Event time selection -->
+        <el-form-item label="Event time">
+          <el-col :span="11">
+            <el-time-select
+              v-model="form.fromTime"
+              placeholder="From"
+              @change="onEventStartTimeChange"
+              :picker-options="timePickerOptions">
+            </el-time-select>
+          </el-col>
+          <el-col class="line" :span="2">-</el-col>
+          <el-col :span="11">
+            <el-time-select
+              v-model="form.toTime"
+              placeholder="To"
+              @change="onEventStartEndChange"
+              :picker-options="timePickerOptions">
+            </el-time-select>
+          </el-col>
+        </el-form-item>
+
+        <!-- Guest selection -->
+        <el-form-item label="Event guests">
+          <el-select v-model="form.guests" multiple placeholder="Select">
+            <el-option
+              v-for="item in (formData.otherUsers || [])"
+              :key="item.id"
+              :label="item.name"
+              :value="item.id">
+            </el-option>
+          </el-select>
+        </el-form-item>
+
+        <!-- Actions -->
+        <el-form-item label-width="120px">
+          <el-button type="primary" @click="submitForm">Create</el-button>
+        </el-form-item>
+
+      </el-form>
     </div>
   </div>
 </template>
@@ -57,6 +64,7 @@
 import Vue from 'vue';
 import VeeValidate, {Validator} from 'vee-validate';
 import VueRecaptcha from 'vue-recaptcha';
+
 import validators from '../services/validatorFactory.js';
 
 Validator.extend('customEmail', {
@@ -71,6 +79,22 @@ export default {
   props: ['formData'],
   data() {
     return {
+      currentUser: this.formData.currentUser,
+      otherUsers: this.formData.otherUsers,
+
+      timePickerOptions: {
+        start: '08:00',
+        step: '00:30',
+        end: '20:00',
+      },
+
+      form: {
+        date: null,
+        fromTime: null,
+        toTime: null,
+        guests: [],
+      },
+
       siteKey: process.env.siteKey,
     };
   },
@@ -78,6 +102,30 @@ export default {
     'vue-recaptcha': VueRecaptcha,
   },
   methods: {
+    /**
+     * Change event handler
+     * @param  {any} event Change event data
+     */
+    onEventDateChange(event) {
+      console.log(event);
+    },
+
+    /**
+     * Change event handler
+     * @param  {any} event Change event data
+     */
+    onEventStartTimeChange(event) {
+      console.log('Start', event);
+    },
+
+    /**
+     * Change event handler
+     * @param  {any} event Change event data
+     */
+    onEventStartEndChange(event) {
+      console.log('End', event);
+    },
+
     validateBeforeSubmit(e) {
       this.$validator.validateAll();
 

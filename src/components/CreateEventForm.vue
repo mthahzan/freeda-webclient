@@ -6,37 +6,17 @@
 
     <div class="container text-left form">
       <form @submit.prevent="validateBeforeSubmit">
-        <div class="form-group">
-          <label for="company">Company (required)</label>
-          <input name="company" v-model="formData.company" v-validate data-vv-validate-on="blur" data-vv-rules="required" @focus="errors.remove('company')" :class="{'form-control': true}" type="text" placeholder="Company name">
-          <small v-show="errors.has('company')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('company') }}</small>
+        <div>
+          <br>
+          <vue-recaptcha
+            ref="recaptcha"
+            :sitekey="siteKey"
+            @verify="onVerify"
+            >
+          </vue-recaptcha>
+          <small v-show="formData.recaptcha.warning" :class="{'form-text': true, 'text-danger':true}">Please verify the reCAPTCHA</small>
+          <br>
         </div>
-        <div class="form-group">
-          <label for="contact">Name (required)</label>
-          <input name="contact" v-model="formData.contact" v-validate data-vv-validate-on="blur" data-vv-rules="required" @focus="errors.remove('contact')" :class="{'form-control': true}" type="text" placeholder="Contact name">
-          <small v-show="errors.has('contact')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('contact') }}</small>
-        </div>
-        <div class="form-group">
-          <label for="phone">Contact Number</label>
-          <input name="phone" v-model="formData.phone" v-validate data-vv-validate-on="blur" data-vv-rules="numeric" @focus="errors.remove('phone')" :class="{'form-control': true}" type="text" placeholder="Contact number">
-          <small v-show="errors.has('phone')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('phone') }}</small>
-        </div>
-        <div class="form-group">
-          <label for="email">Email Address (required)</label>
-          <input name="email" v-model="formData.email" v-validate data-vv-validate-on="blur" data-vv-rules="required|customEmail:email" @focus="errors.remove('email')" :class="{'form-control': true, 'is-danger': errors.has('email') }" type="text" placeholder="Email address">
-          <small v-show="errors.has('email')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('email') }}</small>
-        </div>
-        <div class="form-group">
-          <label for="url">Web Address</label>
-          <input name="url" v-model="formData.url" v-validate data-vv-validate-on="blur" data-vv-rules="url" @focus="errors.remove('url')" :class="{'form-control': true, 'is-danger': errors.has('url') }" type="text">
-          <small v-show="errors.has('url')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('url') }}</small>
-        </div>
-        <div class="form-group">
-          <label for="message">Message (required)</label>
-          <textarea name="message" v-model="formData.message" v-validate data-vv-validate-on="blur" data-vv-rules="required" @focus="errors.remove('message')" :class="{'form-control': true}" type="text"></textarea>
-          <small v-show="errors.has('message')" :class="{'form-text': true, 'text-danger':true}">{{ errors.first('message') }}</small>
-        </div>
-
         <button type="submit" :class="{'btn': true, 'btn-primary':true, 'btn-submit': true}">Submit</button>
       </form>
     </div>
@@ -45,40 +25,32 @@
 
 <script>
 import Vue from 'vue';
-import VeeValidate, {Validator} from 'vee-validate';
-import VueRecaptcha from 'vue-recaptcha';
-import validators from '../services/validatorFactory.js';
+import VeeValidate from 'vee-validate';
 
-Validator.extend('customEmail', {
-  getMessage: validators.message,
-  validate: validators.validator,
-});
+// import validators from '../services/validatorFactory.js';
+
+// Validator.extend('customEmail', {
+//   getMessage: validators.message,
+//   validate: validators.validator,
+// });
 
 Vue.use(VeeValidate);
 
 export default {
-  name: 'leadform',
+  name: 'eventCreateForm',
   props: ['formData'],
   data() {
+    const otherUsers = this.formData.otherUsers;
+    console.log(otherUsers);
+
     return {
       siteKey: process.env.siteKey,
     };
   },
-  components: {
-    'vue-recaptcha': VueRecaptcha,
-  },
+  components: {},
   methods: {
     validateBeforeSubmit(e) {
       this.$validator.validateAll();
-
-      if(!this.formData.recaptcha.verified) {
-        this.formData.recaptcha.warning = true;
-      }
-
-      if (!this.errors.any() && this.formData.recaptcha.verified) {
-        window.fbq('track', 'Lead');
-        this.submitForm();
-      }
     },
     submitForm() {
       this.errors.clear();
@@ -94,13 +66,7 @@ export default {
         recaptcha: this.formData.recaptcha,
       });
     },
-    onVerify(response) {
-      this.formData.recaptcha = {
-        verified: true,
-        warning: false,
-        response,
-      };
-    },
+    onVerify(response) {},
   },
 };
 </script>

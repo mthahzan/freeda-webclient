@@ -1,7 +1,7 @@
 <template>
   <div id="createEventsPage">
     <div>
-      <LeadForm @send="onSubmit" :form-data="formData"></LeadForm>
+      <CreateEventForm @send="onSubmit" :form-data="formData"></CreateEventForm>
     </div>
 
     <!-- Sticky Footer  -->
@@ -14,58 +14,101 @@
 </template>
 
 <script>
-import urls from '../services/urlFactory';
-import {get, post} from '../services/request';
+// import urls from '../services/urlFactory';
+// import {get, post} from '../services/request';
 
-import LeadForm from '../components/LeadForm';
+import CreateEventForm from '../components/CreateEventForm';
+
+// Hackathon data lol
+const data = {
+  /**
+   * Current user
+   * @type {Object}
+   */
+  currentUser: {
+    id: 1,
+    name: 'Mohomed Thahsan',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  },
+
+  /**
+   * User options
+   * @type {Array}
+   */
+  otherUsers: [{
+    id: 2,
+    name: 'Chomal Meguntenna',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  }, {
+    id: 3,
+    name: 'Dhammika Sriyananda',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  }, {
+    id: 4,
+    name: 'Thilina Lokuge',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  }],
+
+  /**
+   * Meeting location options
+   * @type {Array}
+   */
+  locations: [{
+    id: 1,
+    name: 'Main Conference Room',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  }, {
+    id: 2,
+    name: 'Lobby Area',
+    avatar: '', // TODO: Add avatar URL
+    googleCalendarAccessKey: '', // TODO: Add Access key
+  }],
+};
 
 /**
  * Create request configurations
  * @return {object} The request config object
  */
-const createRequestConfig = () => {
-  const token = window.location.href.split('ref=').pop() || '';
-
-  return {
-    headers: {
-      'Authorization': `Bearer: ${token}`,
-    },
-  };
-};
+// const createRequestConfig = () => {
+//   const token = window.location.href.split('ref=').pop() || '';
+//
+//   return {
+//     headers: {
+//       'Authorization': `Bearer: ${token}`,
+//     },
+//   };
+// };
 
 const createEmptyDataObject = () => {
   return {
-    company: '',
-    contact: '',
-    phone: '',
-    email: '',
-    url: '',
-    message: '',
-    recaptcha: {
-      verified: false,
-      warning: false,
-      response: null,
-    },
+    currentUser: data.currentUser,
+
+    otherUsers: data.otherUsers,
   };
 };
 
 export default {
   name: 'leadpage',
-  beforeMount() {
-    this.overlayActive = true;
-
-    get(urls.validateURL(), createRequestConfig())
-      .then(() => {
-        this.$data.overlayActive = false;
-        this.$data.pageValid = true;
-      })
-      .catch(() => {
-        this.$data.error = true;
-        this.$data.pageValid = false;
-        this.$data.message = 'Page not found';
-        this.$data.overlayActive = false;
-      });
-  },
+  // beforeMount() {
+  //   this.overlayActive = true;
+  //
+  //   get(urls.validateURL(), createRequestConfig())
+  //     .then(() => {
+  //       this.$data.overlayActive = false;
+  //       this.$data.pageValid = true;
+  //     })
+  //     .catch(() => {
+  //       this.$data.error = true;
+  //       this.$data.pageValid = false;
+  //       this.$data.message = 'Page not found';
+  //       this.$data.overlayActive = false;
+  //     });
+  // },
   data() {
     return {
       pageValid: false,
@@ -77,7 +120,7 @@ export default {
     };
   },
   components: {
-    LeadForm,
+    CreateEventForm,
   },
   methods: {
     reset() {
@@ -89,27 +132,27 @@ export default {
       }
     },
     onSubmit(params) {
-      const token = window.location.href.split('ref=').pop() || '';
+      // const token = window.location.href.split('ref=').pop() || '';
 
-      this.overlayActive = true;
-      post(urls.leadUrl(), params, {
-        headers: {
-          'Authorization': `Bearer: ${token}`,
-        },
-      })
-        .then(() => {
-          window.fbq('track', 'CompleteRegistration');
-          this.$data.overlayActive = false;
-          this.$data.message = `Thanks for sharing your details.
-            We will get in touch with you.`;
-          this.$data.formSubmitted = true;
-          this.$data.error = false;
-        })
-        .catch(() => {
-          this.$data.overlayActive = false;
-          this.$data.message = 'Oops, something went wrong!';
-          this.$data.error = true;
-        });
+      // this.overlayActive = true;
+      // post(urls.leadUrl(), params, {
+      //   headers: {
+      //     'Authorization': `Bearer: ${token}`,
+      //   },
+      // })
+      //   .then(() => {
+      //     window.fbq('track', 'CompleteRegistration');
+      //     this.$data.overlayActive = false;
+      //     this.$data.message = `Thanks for sharing your details.
+      //       We will get in touch with you.`;
+      //     this.$data.formSubmitted = true;
+      //     this.$data.error = false;
+      //   })
+      //   .catch(() => {
+      //     this.$data.overlayActive = false;
+      //     this.$data.message = 'Oops, something went wrong!';
+      //     this.$data.error = true;
+      //   });
     },
   },
 };
