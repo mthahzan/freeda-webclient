@@ -7,8 +7,13 @@
     <div class="container text-left form">
       <el-form ref="form" :model="form" label-width="120px">
 
-        <!-- Event location selection -->
-        <el-form-item label="Alternatives">
+        <!-- Event time confirmation label -->
+        <el-form-item v-if="state === 'ok'" label="Event time">
+          <p>{{ data.timeslot.start + ' to ' + data.timeslot.end }}</p>
+        </el-form-item>
+
+        <!-- Event time selection -->
+        <el-form-item v-if="state === 'conflict'" label="Alternatives">
           <el-select v-model="form.timeslot" placeholder="Select alternative timeslot">
             <el-option
               v-for="item in (data.timeslots || [])"
@@ -33,10 +38,9 @@
 
 export default {
   name: 'confirmationform',
-  props: ['data'],
+  props: ['data', 'message', 'state'],
   data() {
     return {
-      message: 'Please select an alternative',
       form: {
         timeslot: null,
       },

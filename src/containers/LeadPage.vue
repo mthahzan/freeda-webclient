@@ -11,7 +11,7 @@
     </div>
 
     <div v-if="!formSubmitted && pageState === 1">
-      <ConfirmationForm @send="onConfimationSubmit" :data="confirmationData"></ConfirmationForm>
+      <ConfirmationForm @send="onConfimationSubmit" :data="confirmationData" :state="confirmationState" :message="confirmationMessage"></ConfirmationForm>
     </div>
 
     <footer class="footer">
@@ -66,6 +66,8 @@ export default {
       otherUsers: [],
       locations: [],
       confirmationData: {},
+      confirmationMessage: null,
+      confirmationState: null,
 
       error: false,
       message: null,
@@ -110,7 +112,15 @@ export default {
         .then((response) => {
           this.$data.pageState = 1;
 
-          this.$data.confirmationMessage = 'Please select an alternative';
+          if (response.data.status === 'ok') {
+            this.$data.confirmationMessage =
+              'Please confirm your event creation';
+            this.$data.confirmationState = 'ok';
+          } else {
+            this.$data.confirmationMessage = 'Please select an alternative';
+            this.$data.confirmationState = 'conflict';
+          }
+
           this.$data.confirmationData = response.data;
           this.$data.overlayActive = false;
         });
@@ -125,8 +135,6 @@ export default {
 
       confirm(data)
         .then((response) => {
-          console.log('RESPONSE', response);
-
           this.$data.formSubmitted = true;
           this.$data.message = 'All done';
           this.$data.overlayActive = false;
